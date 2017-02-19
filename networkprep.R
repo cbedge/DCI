@@ -18,11 +18,11 @@
 
 library(igraph)
 
-calc.prep <- function(Parth){
+calc.prep <- function(Parth, Quality = "Default"){
   Edge <- cbind(Parth$Fnode, Parth$Tnode) #The list of edges
   
   #Turning the list of edges into an adjacency matrix
-  #For this to run correctly segments must be labelled 1, 2, 3... with no missing segments, I think I fixed this now
+  #For this to run correctly segments must be labelled 1, 2, 3... with no missing segments.
   Edge.adj <- matrix(0, nrow=length(Edge[,1]), ncol=length(Edge[,1]))
   for (i in 1:length(Edge[,1]))
   {
@@ -39,7 +39,13 @@ calc.prep <- function(Parth){
   Nodes$ID <- Parth$Fnode #upstream segment
   Nodes$Junction <- Parth$BARRIER_CO #barrier downstream of the segment, if present
   Nodes$Area <- Parth$Shape_Leng #length of segment
-  Nodes$Qual <- 100 #default value, can be changed
+  
+  if(Quality == "Default"){
+    Nodes$Qual <- 1 #default value
+  }else{
+    Nodes$Qual <- Parth[,Quality]/100
+  }
+  #Nodes$Qual <- 100 #default value, can be changed
   Nodes$PermDS <- 1 #default value, completely permeable
   Nodes$PermUS <- Parth$PermPass #assigning a permeability to move from segment downstream into the focal segment
   Nodes$PermUS[is.na(Nodes$PermUS)] <- 1 #Replace NA's with 1 for completely permeable

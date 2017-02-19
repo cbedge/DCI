@@ -34,11 +34,11 @@ DCI.calc <- function(nodefile, graphfile, mouth, calc.DCIs = 0){
     p.length <- NULL 
     pass <- NULL
     for (j in 1:(length(unique(nodefile$ID))-1)) {  
-      p.length2 <- 0
+      p.length2 <- 0 #Stores the length of the path
       pass2 <- 1
         for (c in paths[[j]]) {
           i <- unique(nodefile$ID)[c]
-          p.length2 <- p.length2 + nodefile$Area[i] #length of the path
+          p.length2 <- p.length2 + (nodefile$Area[i] * nodefile$Qual[i]) #product of length of path and quality
           pass2 <- pass2 * (nodefile$PermUS[i] * nodefile$PermDS[i])
         }
       p.length <- c(p.length, p.length2)
@@ -48,8 +48,8 @@ DCI.calc <- function(nodefile, graphfile, mouth, calc.DCIs = 0){
     itself <- c(k, k, nodefile$Area[k], nodefile$PermUS[k] * nodefile$PermUS[k])
     all.paths <- rbind(all.paths, all.paths2, itself)
   }  
-  all.paths$Start.Length <- nodefile$Area[match(all.paths$start, nodefile$ID)]
-  all.paths$End.Length <- nodefile$Area[match(all.paths$end, nodefile$ID)]
+  all.paths$Start.Length <- (nodefile$Area[match(all.paths$start, nodefile$ID)]) * (nodefile$Qual[match(all.paths$start, nodefile$ID)])
+  all.paths$End.Length <- (nodefile$Area[match(all.paths$end, nodefile$ID)]) * (nodefile$Qual[match(all.paths$end, nodefile$ID)])
 
   #DCIp Calculation
   tot.length <- sum(nodefile$Area)
