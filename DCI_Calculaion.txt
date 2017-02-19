@@ -1,0 +1,83 @@
+DCI Calculation Notes
+
+Code was created by Chris Edge (cbedge@gmail.com). Any questions or bugs should be directed to Chris.
+
+R code was developed to calculate DCIp, DCId, and DCIs (Cote et al. 2009) to quantify stream connectivity.
+
+The input file is a .csv with the following fields 
+Fnode: The focal stream segment
+Tnode: The stream segment downstream of the focal stream segment
+BARRIER_CO: The barrier between the segments if present
+Shape_Leng: The length of the stream segment (Fnode)
+PermPass: The upstream permeability of the barrier, where 0 is impermeable and 1 is permeable. Can be left blank if completely permeable
+The mouth segment should have no value for Tnode and PermPass, and Shape_Leng should be set to 0.
+
+
+There are several ways to generate the .csv input file. I generate the file in arcgis using the barrier assessment (BAT) tool with the following steps
+
+Input files
+Watercourse, shapefile
+	The fields don’t matter because it will be altered in the following steps
+Barriers, shapefile. Has the following fields at a minimum, other fields can be added for additional information
+	BARRIER_CO: Unique identifier for the barrier
+	PermPass: The upstream permeability of the barrier
+
+Steps to create input file
+1)	Dissolve watercourse so it is one feature.
+2)	Snap barrier layer to dissolved watercourse
+3)	Use split line at point to create individual segments between barrier and between confluences.
+4)	Inspect water course to make sure there are no loops or braids. There can only be one path between any two segments in the stream network.
+5)	Add Shape_Leng field to watercourse and calculate length of segments (calculate geometry)
+6)	Add ID field to watercourse and calculate as FID +1 (no zeros)
+7)	Add Region field to watercourse and populate with stream name
+8)	Create scenario with BAT tool, set Segment ID to ID, Region to Region, Fnode to ?, and Tnode to ?. This step adds Fnode and Tnode to the watercourse layer which is the edge list of the stream network.
+9)	Convert the watercourse to a point layer using the feature to point tool with “end” selected
+10)	Use the spatial join to join the barrier layer to the newly created point layer. This creates a point layer with upstream (Fnode), downstream (Tnode), and barrier attributes in one file.
+11)	Identify the mouth segment; notice that the Fnode value does not exist in the Tnode column, this is because the segment does not actually exist.
+12)	Export the table as a .csv file, open and add a row for the mouth. Add the Tnode value identified in step 11 in the Fnode column, and set Shape_Leng to 0, and PermPass to 1. All other values can be left blank.
+
+
+To calculate DCI two functions need to be run
+
+calc.prep(Parth) is run first and it creates the necessary files from the .csv to be run by DCI.calc()
+
+Parth: The input is a .csv file with the following fields, if created in arc using the steps above then the following fields will be present
+
+Fnode: The focal stream segment
+Tnode: The stream segment downstream of the focal stream segment
+BARRIER_CO: The barrier between the segments if present
+Shape_Leng: The length of the stream segment (Fnode)
+PermPass: The upstream permeability of the barrier, where 0 is impermeable and 1 is permeable. Can be left blank if completely permeable
+
+calc.prep() creates a node file and a graph file
+$graph is the graph object
+$Nodes is the node file
+
+DCI.calc(nodefile , graphfile, mouth, DCIs) calculates DCIp, DCId, and DCIs
+
+nodefile: contains the node identifier (ID), length (Area), Quality (Qual), permeability to move into the segment from the downstream segment (PermUS), and the permeability to move from the segment into the downstream segment (PermDS).
+
+In the current iteration, default values are set for PermDS (1) and for Qual (100). In future iterations the ability to change these values will be included.
+
+graphfile: a directed graph of the stream network, Fnode corresponds to ID in the nodefile
+
+mouth: the ID of the mouth segment. This segment should have an area of 0 and should not be connected to a downstream segment. It is only used in calculation of DCIs
+
+DCIs: determines whether DCIs is calculated (1) or not (0). Default is 0.
+
+The output is a table for DCIp and DCId values and a table of DCIs values.
+
+
+Example
+library(igraph)
+
+WC <- read.csv(file = "testWC.csv", header=T) #Select file that describes network
+
+WC.prep <- calc.prep(Parth = WC) #prepare the files for DCI calculation
+
+WCDCI <- DCI.calc(nodefile = WC.prep$Nodes, graphfile = WC.prep$graph, mouth=6, calc.DCIs = 1) #calculate DCI
+
+WCDCI$Index #returns DCId and DCIp values
+
+WCDCI$DCIs #returns DCIs values if calculated
+
