@@ -1,23 +1,28 @@
+Last update 10 March 2017
+
 DCI Calculation Notes
 
 Code was written by Chris Edge (cbedge@gmail.com). Any questions or bugs should be directed to Chris.
 
 The code was developed while I worked as a post doc at the University of Toronto and now as an employee at the Toronto and Region Conservation Authority (TRCA). Neither Toronto and Region Conservation Authority or the University of Toronto accept any consequence of others using this code.
 
-I do ask that you write me an email and let me know what you are using the code for, this helps me justify continuing to develop it and adding more functionality.
+I do ask that you write me an email (cbedge@gmail.com or cedge@trca.on.ca) and let me know what you are using the code for, this helps me justify continuing to develop it and adding more functionality.
 
 R code was developed to calculate DCIp, DCId, and DCIs (Cote et al. 2009) to quantify stream connectivity.
 
-The input file is a .csv with the following fields 
+Recent addition is a new function (DistToMouth) to calculate the distance from all segments to the mouth of a river.
+
+The input file is a .csv that describes the structure of the stream network with the following fields 
 Fnode: The focal stream segment
 Tnode: The stream segment downstream of the focal stream segment
 BARRIER_CO: The barrier between the segments if present
 Shape_Leng: The length of the stream segment (Fnode)
 PermPass: The upstream permeability of the barrier, where 0 is impermeable and 1 is permeable. Can be left blank if completely permeable
+Quality (OPTIONAL): is the quality of the stream segment between 0 and 100 where 0 is low and 100 is high.
 The mouth segment should have no value for Tnode and PermPass, and Shape_Leng should be set to 0.
 
 
-There are several ways to generate the .csv input file. I generate the file in arcgis using the barrier assessment (BAT) tool with the following steps
+There are several ways to generate the .csv input file. I generate the file in arcgis using the barrier assessment tool (BAT) with the following steps
 
 Input files
 Watercourse, shapefile
@@ -43,7 +48,7 @@ Steps to create input file
 
 To calculate DCI two functions need to be run
 
-calc.prep(Parth) is run first and it creates the necessary files from the .csv to be run by DCI.calc()
+calc.prep(Parth, Quality = "Default") is run first and it creates the necessary files from the .csv to be run by DCI.calc()
 
 Parth: The input is a .csv file with the following fields, if created in arc using the steps above then the following fields will be present
 
@@ -52,6 +57,7 @@ Tnode: The stream segment downstream of the focal stream segment
 BARRIER_CO: The barrier between the segments if present
 Shape_Leng: The length of the stream segment (Fnode)
 PermPass: The upstream permeability of the barrier, where 0 is impermeable and 1 is permeable. Can be left blank if completely permeable
+Quality: is the quality of the stream segment between 0 and 100 where 0 is low and 100 is high. If Quality is not provided set to "Default" in function.
 
 calc.prep() creates a node file and a graph file
 $graph is the graph object
@@ -77,11 +83,13 @@ library(igraph)
 
 WC <- read.csv(file = "testWC.csv", header=T) #Select file that describes network
 
-WC.prep <- calc.prep(Parth = WC) #prepare the files for DCI calculation
+WC.prep <- calc.prep(Parth = WC, Quality = "Default") #prepare the files for DCI calculation. No quality field is set.
 
 WCDCI <- DCI.calc(nodefile = WC.prep$Nodes, graphfile = WC.prep$graph, mouth=6, calc.DCIs = 1) #calculate DCI
 
 WCDCI$Index #returns DCId and DCIp values
 
 WCDCI$DCIs #returns DCIs values if calculated
+
+DistToMouth(nodefile = WC.prep$Nodes, graphfile = WC.prep$graph, mouth=6) #calculates distance from each barrier to the mouth
 

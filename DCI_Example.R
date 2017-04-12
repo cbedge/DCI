@@ -12,9 +12,5 @@ WCDCI$Index #returns DCId and DCIp values
 
 WCDCI$DCIs #returns DCIs values if calculated
 
-WC.prep
 
-nodefile <- WC.prep$Nodes
-graphfile <- WC.prep$graph
-mouth <- 6
-calc.DCIs <- 1
+ToMouth <- DistToMouth(nodefile = WC.prep$Nodes, graphfile = WC.prep$graph, mouth=6) #returns the distance from all segments to the mouth
