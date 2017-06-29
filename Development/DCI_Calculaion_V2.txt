@@ -1,0 +1,108 @@
+DCI Calculation V2
+
+Updated 29 June 2017
+
+DCI Calculation Notes
+
+Code was written by Chris Edge (cbedge@gmail.com). Any questions or bugs should be directed to Chris.
+
+The code was developed while I worked as a post doc at the University of Toronto and now as an employee at the Toronto and Region Conservation Authority (TRCA). Neither Toronto and Region Conservation Authority or the University of Toronto accept any consequence of others using this code.
+
+I do ask that you write me an email (cbedge@gmail.com or cedge@trca.on.ca) and let me know what you are using the code for, this helps me justify continuing to develop it and adding more functionality.
+
+R code was developed to calculate DCIp, DCId, and DCIs (Cote et al. 2009) to quantify stream connectivity.
+
+
+############
+V2 Update was significant. Data requirements for input and analyses have changed so the readme has changed as well.
+############
+
+
+The input file is a .csv that describes the structure of the stream network with the following fields 
+Fnode: The focal stream segment
+Tnode: The stream segment downstream of the focal stream segment
+BARRIER_CO: The barrier between the segments if present
+Shape_Leng: The length of the stream segment (Fnode)
+PassUS: Permeability to move upstream from Fnode into Tnode, where 0 is impermeable and 1 is permeable. Must be set for each passage now.
+PassDS: Permeability to move down stream from Tnode into Fnode, where 0 is impermeable and 1 is permeable. Must be set for each passage now
+Quality (OPTIONAL): is the quality of the stream segment between 0 and 100 where 0 is low and 100 is high.
+The mouth segment should have no value for Tnode, PassUS, and PassDS. Shape_Leng should be set to 0.
+
+
+There are several ways to generate the .csv input file. I generate the file in arcgis using the barrier assessment tool (BAT) with the following steps
+
+Input files
+Watercourse, shapefile
+	The fields don’t matter because it will be altered in the following steps
+Barriers, shapefile. Has the following fields at a minimum, other fields can be added for additional information
+	BARRIER_CO: Unique identifier for the barrier
+	PermPass: The upstream permeability of the barrier
+
+Steps to create input file
+1)	Dissolve watercourse so it is one feature.
+2)	Snap barrier layer to dissolved watercourse
+3)	Use split line at point to create individual segments between barrier and between confluences.
+4)	Inspect water course to make sure there are no loops or braids. There can only be one path between any two segments in the stream network.
+5)	Add Shape_Leng field to watercourse and calculate length of segments (calculate geometry)
+6)	Add ID field to watercourse and calculate as FID +1 (no zeros)
+7)	Add Region field to watercourse and populate with stream name
+8)	Create scenario with BAT tool, set Segment ID to ID, Region to Region, Fnode to ?, and Tnode to ?. This step adds Fnode and Tnode to the watercourse layer which is the edge list of the stream network.
+9)	Convert the watercourse to a point layer using the feature to point tool with “end” selected
+10)	Use the spatial join to join the barrier layer to the newly created point layer. This creates a point layer with upstream (Fnode), downstream (Tnode), and barrier attributes in one file.
+11)	Identify the mouth segment; notice that the Fnode value does not exist in the Tnode column, this is because the segment does not actually exist.
+12)	Export the table as a .csv file
+13)	Open *.csv file and add a row for the mouth. Add the Tnode value identified in step 11 in the Fnode column, and set Shape_Leng to 0, and PermUS and PermDS to 1. All other values can be left blank.
+14)	For all mising PermUS and PermDS values enter 1. These fields must be filled out.
+
+To calculate DCI two functions need to be run
+
+calc.prep(Parth, Quality = "Default") is run first and it creates the necessary files from the .csv to be run by DCI.calc()
+If you have a quality for each segment define state in the Quality field
+
+Parth: The input is a .csv file with the following fields, if created in arc using the steps above then the following fields will be present
+
+Fnode: The focal stream segment
+Tnode: The stream segment downstream of the focal stream segment
+BARRIER_CO: The barrier between the segments if present
+Shape_Leng: The length of the stream segment (Fnode)
+PassUS: Permeability to move upstream from Fnode into Tnode, where 0 is impermeable and 1 is permeable. Must be set for each passage now.
+PassDS: Permeability to move down stream from Tnode into Fnode, where 0 is impermeable and 1 is permeable. Must be set for each passage now
+Quality: is the quality of the stream segment between 0 and 100 where 0 is low and 100 is high. If Quality is not provided set to "Default" in function.
+
+calc.prep() creates a node file, graph file, and edge matrix of permeabilities
+$graph is the graph object
+$Nodes is the node file
+$edgematrix
+
+DCI.calc(nodefile , graphfile, mouth, edgemat, DCIs) calculates DCIp, DCId, and DCIs
+
+nodefile: contains the node identifier (ID), length (Area), Quality (Qual), permeability to move into the segment from the downstream segment (PermUS), and the permeability to move from the segment into the downstream segment (PermDS).
+In the current version, PermUS and PermDS must be set.
+The quality field will be set to 1 if the default is used
+
+graphfile: a directed graph of the stream network, Fnode corresponds to ID in the nodefile
+
+edgemat: table with all possible connections. values between 0 and 1 where 1 is completely permeable and 0 is completely impermeable.
+
+mouth: the ID of the mouth segment. This segment should have an area of 0 and should not be connected to a downstream segment. It is only used in calculation of DCIs
+
+DCIs: determines whether DCIs is calculated (1) or not (0). Default is 0.
+
+The output is a table for DCIp and DCId values and a table of DCIs values.
+
+
+Example
+library(igraph)
+
+WC <- read.csv(file = "testWC.csv", header=T) #Select file that describes network
+
+WC.prep <- calc.prep(Parth = WC, Quality = "Default") #prepare the files for DCI calculation. No quality field is set.
+
+WCDCI <- DCI.calc(nodefile = WC.prep$Nodes, graphfile = WC.prep$graph, edgemat = WC.prep$edgematrix, mouth=6, calc.DCIs = 1) #calculate DCI
+
+WCDCI$Index #returns DCId and DCIp values
+
+WCDCI$DCIs #returns DCIs values if calculated
+
+DistToMouth(nodefile = WC.prep$Nodes, graphfile = WC.prep$graph, mouth=6) #calculates distance from each barrier to the mouth
+
