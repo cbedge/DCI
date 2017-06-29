@@ -1,3 +1,9 @@
+###################################################################
+###Prepared by Chris Edge (cbedge@gmail.com or cedge@trca.on.ca)###
+###Questions, bugs or comments should be directed to Chris      ###
+###################################################################
+
+
 ###Calculates the distance from each segement to the mouth of a river###
 
 DistToMouth <- function(nodefile, graphfile, mouth){
