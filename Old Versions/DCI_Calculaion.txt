@@ -63,7 +63,7 @@ calc.prep() creates a node file and a graph file
 $graph is the graph object
 $Nodes is the node file
 
-DCI.calc(nodefile , graphfile, mouth, DCIs) calculates DCIp, DCId, and DCIs
+DCI.calc(nodefile, graphfile, mouth, DCIs) calculates DCIp, DCId, and DCIs
 
 nodefile: contains the node identifier (ID), length (Area), Quality (Qual), permeability to move into the segment from the downstream segment (PermUS), and the permeability to move from the segment into the downstream segment (PermDS).
 

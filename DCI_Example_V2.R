@@ -1,6 +1,6 @@
 library(igraph)
 
-setwd("C:/Users/christopher.edge/Documents/GitHub/DCI/Development/Data") #Update directory to local
+setwd("C:/Users/christopher.edge/Documents/GitHub/DCI/data") #Update directory to local
 
 WC <- read.csv(file = "testWC_v2.csv", header=T) #Select file that describes network
 names(WC)

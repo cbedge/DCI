@@ -6,9 +6,11 @@ DCI Calculation Notes
 
 Code was written by Chris Edge (cbedge@gmail.com). Any questions or bugs should be directed to Chris.
 
-The code was developed while I worked as a post doc at the University of Toronto and now as an employee at the Toronto and Region Conservation Authority (TRCA). Neither Toronto and Region Conservation Authority or the University of Toronto accept any consequence of others using this code.
+The code was developed while I worked as a post doc at the University of Toronto and an employee at the Toronto and Region Conservation Authority (TRCA). Neither Toronto and Region Conservation Authority or the University of Toronto accept any consequence of others using this code.
 
-I do ask that you write me an email (cbedge@gmail.com or cedge@trca.on.ca) and let me know what you are using the code for, this helps me justify continuing to develop it and adding more functionality.
+In January of 2018 I am moving to a new position and will do my best to keep the code updated and current. If there are any issues send me an email at cbedge@gmail.com and I will try to remedy any issues that come up
+
+I do ask that you write me an email (cbedge@gmail.com) and let me know what you are using the code for, this helps me justify continuing to develop it and adding more functionality.
 
 R code was developed to calculate DCIp, DCId, and DCIs (Cote et al. 2009) to quantify stream connectivity.
 
